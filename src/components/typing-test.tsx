@@ -185,6 +185,8 @@ export default function TypingTest() {
   const [wpmHistory, setWpmHistory] = useState<WpmSample[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const [fadeInIdle, setFadeInIdle] = useState(true);
+  const resettingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // refs for stable event handler
@@ -308,22 +310,55 @@ export default function TypingTest() {
   }, [input]);
 
   const reset = useCallback(() => {
-    setText(generateText(getWordCount(durationRef.current)));
-    setInput("");
-    setState("idle");
-    setStart(null);
-    setTimeLeft(durationRef.current);
-    setWpm(0);
-    setAccuracy(100);
-    setCorrect(0);
-    setIncorrect(0);
-    setWpmHistory([]);
-    setShowResults(false);
-    setFadeOut(false);
-    lastSampleCorrect.current = 0;
-    lastSampleIncorrect.current = 0;
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    if (resettingRef.current) return;
+    const doReset = () => {
+      setText(generateText(getWordCount(durationRef.current)));
+      setInput("");
+      setState("idle");
+      setStart(null);
+      setTimeLeft(durationRef.current);
+      setWpm(0);
+      setAccuracy(100);
+      setCorrect(0);
+      setIncorrect(0);
+      setWpmHistory([]);
+      setShowResults(false);
+      setFadeOut(false);
+      lastSampleCorrect.current = 0;
+      lastSampleIncorrect.current = 0;
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      // Fade in the typing screen
+      setFadeInIdle(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFadeInIdle(true);
+          resettingRef.current = false;
+        });
+      });
+    };
+
+    // If on results screen, fade out first
+    if (stateRef.current === "done") {
+      resettingRef.current = true;
+      setShowResults(false);
+      setTimeout(doReset, 400);
+    } else {
+      doReset();
+    }
   }, []);
+
+  // Global key listener for results screen (Enter to restart)
+  useEffect(() => {
+    if (state !== "done") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === "Enter" || e.code === "Tab") {
+        e.preventDefault();
+        reset();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [state, reset]);
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -520,13 +555,13 @@ export default function TypingTest() {
               onClick={reset}
               className="text-[#646669] hover:text-[#d1d0c5] transition-colors font-mono text-xs"
             >
-              press enter or tab to restart
+              press ENTER to restart
             </button>
           </div>
         </div>
       ) : (
         /* ===== TYPING SCREEN ===== */
-        <div className={`w-full flex flex-col items-center transition-opacity duration-[400ms] ease-in-out ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+        <div className={`w-full flex flex-col items-center transition-opacity duration-[400ms] ease-in-out ${fadeOut || !fadeInIdle ? "opacity-0" : "opacity-100"}`}>
           {/* Stats bar */}
           <div className="flex items-center gap-4 mb-5 font-mono h-8">
             <span className="text-xl font-bold text-[#6ee7b7] tabular-nums">

@@ -583,12 +583,12 @@ export default function TypingTest() {
             {chars}
           </div>
 
-          {/* Restart hint */}
+          {/* New words hint */}
           <button
             onClick={reset}
             className="text-[#646669] hover:text-[#d1d0c5] transition-colors font-mono text-xs mb-4"
           >
-            tab to restart
+            tab for a new set
           </button>
 
           {/* Keyboard */}

@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
 } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -134,8 +135,6 @@ const KeyboardProvider = ({
 }) => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioBufRef = useRef<AudioBuffer | null>(null);
-  const soundDataRef = useRef<ArrayBuffer | null>(null);
-  const initingRef = useRef(false);
   const readyRef = useRef(false);
 
   const onKeyDownRef = useRef(onKeyDown);
@@ -143,7 +142,7 @@ const KeyboardProvider = ({
   useEffect(() => { onKeyDownRef.current = onKeyDown; }, [onKeyDown]);
   useEffect(() => { onKeyUpRef.current = onKeyUp; }, [onKeyUp]);
 
-  // Pre-fetch sound data
+  // Eagerly fetch + decode sound sprite so it's ready before first keypress
   useEffect(() => {
     if (!enableSound) return;
     let cancelled = false;
@@ -151,27 +150,17 @@ const KeyboardProvider = ({
       try {
         const res = await fetch("/sounds/sound.ogg");
         if (!res.ok || cancelled) return;
-        soundDataRef.current = await res.arrayBuffer();
+        const data = await res.arrayBuffer();
+        if (cancelled) return;
+        const ctx = new AudioContext();
+        const buf = await ctx.decodeAudioData(data);
+        if (cancelled) { ctx.close(); return; }
+        audioCtxRef.current = ctx;
+        audioBufRef.current = buf;
+        readyRef.current = true;
       } catch {}
     })();
     return () => { cancelled = true; };
-  }, [enableSound]);
-
-  // Lazy AudioContext init on first user gesture
-  const ensureAudio = useCallback(async () => {
-    if (readyRef.current || initingRef.current || !enableSound) return;
-    if (!soundDataRef.current) return;
-    initingRef.current = true;
-    try {
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
-      if (audioCtxRef.current.state === "suspended") await audioCtxRef.current.resume();
-      audioBufRef.current = await audioCtxRef.current.decodeAudioData(
-        soundDataRef.current.slice(0)
-      );
-      readyRef.current = true;
-    } catch {
-      initingRef.current = false;
-    }
   }, [enableSound]);
 
   const playSprite = useCallback(
@@ -221,7 +210,10 @@ const KeyboardProvider = ({
     const handleDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const code = e.code;
-      if (!readyRef.current && enableSound) ensureAudio();
+      // Resume AudioContext on first user gesture (browsers require this)
+      if (enableSound && audioCtxRef.current?.state === "suspended") {
+        audioCtxRef.current.resume();
+      }
       playSoundDown(code);
       highlightKey(code);
       onKeyDownRef.current?.(e);
@@ -240,10 +232,15 @@ const KeyboardProvider = ({
       document.removeEventListener("keydown", handleDown);
       document.removeEventListener("keyup", handleUp);
     };
-  }, [playSoundDown, playSoundUp, highlightKey, unhighlightKey, enableSound, ensureAudio]);
+  }, [playSoundDown, playSoundUp, highlightKey, unhighlightKey, enableSound]);
+
+  const ctxValue = useMemo(
+    () => ({ playSoundDown, playSoundUp }),
+    [playSoundDown, playSoundUp]
+  );
 
   return (
-    <KeyboardContext.Provider value={{ playSoundDown, playSoundUp }}>
+    <KeyboardContext.Provider value={ctxValue}>
       {children}
     </KeyboardContext.Provider>
   );
@@ -290,7 +287,7 @@ export const Keyboard = ({
 /*  Keypad layout                                                      */
 /* ------------------------------------------------------------------ */
 
-export const Keypad = () => {
+export const Keypad = React.memo(() => {
   return (
     <div className="h-full w-fit rounded-xl bg-[#111318] p-1 shadow-sm ring-1 shadow-black/30 ring-white/[0.03]">
       {/* Function Row */}
@@ -504,7 +501,8 @@ export const Keypad = () => {
       </Row>
     </div>
   );
-};
+});
+Keypad.displayName = "Keypad";
 
 /* ------------------------------------------------------------------ */
 /*  Primitives                                                         */

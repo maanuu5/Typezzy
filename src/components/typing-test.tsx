@@ -24,6 +24,10 @@ const WORDS = [
 const TIME_OPTIONS = [15, 30, 60, 120] as const;
 type TimeOption = (typeof TIME_OPTIONS)[number];
 
+function getWordCount(seconds: number): number {
+  return Math.ceil(seconds * 2.5);
+}
+
 function generateText(count: number): string {
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
@@ -63,8 +67,9 @@ export default function TypingTest() {
   useEffect(() => { incorrectRef.current = incorrect; }, [incorrect]);
   useEffect(() => { durationRef.current = duration; }, [duration]);
 
-  // generate words
-  useEffect(() => { setText(generateText(200)); }, []);
+  // generate words (scaled to duration)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setText(generateText(getWordCount(duration))); }, []);
 
   // cursor blink
   useEffect(() => {
@@ -110,7 +115,7 @@ export default function TypingTest() {
   }, [input]);
 
   const reset = useCallback(() => {
-    setText(generateText(200));
+    setText(generateText(getWordCount(durationRef.current)));
     setInput("");
     setState("idle");
     setStart(null);
@@ -219,6 +224,12 @@ export default function TypingTest() {
               onClick={() => {
                 setDuration(t);
                 setTimeLeft(t);
+                setText(generateText(getWordCount(t)));
+                setInput("");
+                setCorrect(0);
+                setIncorrect(0);
+                setAccuracy(100);
+                if (scrollRef.current) scrollRef.current.scrollTop = 0;
               }}
               className={`px-3 py-1 rounded-md transition-colors ${
                 duration === t

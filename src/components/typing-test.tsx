@@ -50,6 +50,7 @@ export default function TypingTest() {
   const [correct, setCorrect] = useState(0);
   const [incorrect, setIncorrect] = useState(0);
   const [cursorOn, setCursorOn] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // refs for stable event handler
@@ -214,40 +215,60 @@ export default function TypingTest() {
   });
 
   return (
-    <div className="flex flex-col items-center w-full max-w-[850px] mx-auto select-none">
-      {/* Time selector */}
-      {state === "idle" && (
-        <div className="flex items-center gap-1 mb-5 font-mono text-sm bg-[#2c2c2e] rounded-lg px-1 py-1">
-          {TIME_OPTIONS.map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                setDuration(t);
-                setTimeLeft(t);
-                setText(generateText(getWordCount(t)));
-                setInput("");
-                setCorrect(0);
-                setIncorrect(0);
-                setAccuracy(100);
-                if (scrollRef.current) scrollRef.current.scrollTop = 0;
-              }}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                duration === t
-                  ? "bg-[#6ee7b7] text-[#1c1c1e] font-bold"
-                  : "text-[#646669] hover:text-[#d1d0c5]"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="flex flex-col items-center w-full select-none">
 
-      {/* Stats bar */}
+      {/* Top row — full width so toggle reaches the real right edge */}
+      <div className="relative flex items-center justify-center w-full mb-5 min-h-[36px]">
+        {/* Center: time selector (visible only when idle) */}
+        {state === "idle" && (
+          <div className="flex items-center gap-1 font-mono text-sm bg-[#2c2c2e] rounded-lg px-1 py-1">
+            {TIME_OPTIONS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => {
+                    setDuration(t);
+                    setTimeLeft(t);
+                    setText(generateText(getWordCount(t)));
+                    setInput("");
+                    setCorrect(0);
+                    setIncorrect(0);
+                    setAccuracy(100);
+                    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                  }}
+                  className={`px-3 py-1 rounded-md transition-colors ${
+                    duration === t
+                      ? "bg-[#6ee7b7] text-[#1c1c1e] font-bold"
+                      : "text-[#646669] hover:text-[#d1d0c5]"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
+
+        {/* Right: sound toggle */}
+        <button
+          onClick={() => setSoundEnabled((v) => !v)}
+          className={`absolute right-0 flex items-center justify-center w-9 h-9 rounded-full bg-[#2c2c2e] transition-colors ${
+            soundEnabled ? "text-[#6ee7b7]" : "text-[#646669] hover:text-[#d1d0c5]"
+          }`}
+          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+        >
+          {soundEnabled ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          )}
+        </button>
+      </div>
+
+      {/* Content area — constrained width */}
+      <div className="flex flex-col items-center w-full max-w-[850px] mx-auto">
       {state !== "done" ? (
         <div className="flex items-center gap-4 mb-5 font-mono h-8">
           <span className="text-xl font-bold text-[#6ee7b7] tabular-nums">
-            {timeLeft}
+            {timeLeft}{state === "idle" && "s"}
           </span>
           {state === "typing" && (
             <>
@@ -294,7 +315,8 @@ export default function TypingTest() {
       </button>
 
       {/* Keyboard */}
-      <Keyboard enableSound onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      <Keyboard enableSound={soundEnabled} onKeyDown={onKeyDown} onKeyUp={onKeyUp} />
+      </div>
     </div>
   );
 }

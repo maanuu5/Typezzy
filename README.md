@@ -12,7 +12,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
@@ -28,13 +28,7 @@
 
 ---
 
-## 🖼️ Preview
-
-> Start the dev server and open [http://localhost:3000](http://localhost:3000) to see it in action.
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework** — [Next.js 16](https://nextjs.org/) (App Router)
 - **UI** — [React 19](https://react.dev/) with the React Compiler enabled
@@ -45,7 +39,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 typezzy/
@@ -72,7 +66,7 @@ typezzy/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -112,7 +106,7 @@ npm start
 
 ---
 
-## 🧪 Available Scripts
+## Available Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -123,7 +117,7 @@ npm start
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Whether it's a bug fix, new feature, or UI improvement — all help is appreciated.
 
@@ -201,12 +195,6 @@ Contributions are welcome! Whether it's a bug fix, new feature, or UI improvemen
 
 ---
 
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
-
----
-
-<p align="center">
-  Built with ☕ and fast fingers.
-</p>

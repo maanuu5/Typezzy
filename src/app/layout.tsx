@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "typeflow — minimalist typing test",
+  title: "typezzy",
   description: "A clean, minimal typing test with an interactive keyboard",
 };
 

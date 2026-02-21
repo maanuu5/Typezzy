@@ -512,8 +512,13 @@ export default function TypingTest() {
             </button>
 
             {/* Dropdown */}
-            {menuOpen && (
-              <div className="absolute right-0 top-11 z-50 w-48 bg-[#2c2c2e] border border-[#3a3a3c] rounded-xl shadow-xl py-1 font-mono text-xs animate-in fade-in">
+            <div
+              className={`absolute right-0 top-11 z-50 w-48 bg-[#2c2c2e] border border-[#3a3a3c] rounded-xl shadow-xl py-1 font-mono text-xs origin-top-right transition-all duration-200 ease-out ${
+                menuOpen
+                  ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
+              }`}
+            >
                 {/* Sound toggle */}
                 <button
                   onClick={() => setSoundEnabled((v) => !v)}
@@ -553,7 +558,6 @@ export default function TypingTest() {
                   X (Twitter)
                 </a>
               </div>
-            )}
           </div>
         )}
       </div>

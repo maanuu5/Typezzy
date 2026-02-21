@@ -79,7 +79,7 @@ typezzy/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/typezzy.git
+git clone https://github.com/maanuu5/typezzy.git
 cd typezzy
 ```
 
@@ -128,7 +128,7 @@ Contributions are welcome! Whether it's a bug fix, new feature, or UI improvemen
 2. **Clone your fork** locally:
 
    ```bash
-   git clone https://github.com/<your-username>/typezzy.git
+   git clone https://github.com/maanuu5/typezzy.git
    cd typezzy
    ```
 

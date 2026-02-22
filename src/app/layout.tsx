@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "typezzy",
   description: "A clean, minimal typing test with an interactive keyboard",
+  icons: {
+    icon: "/Gemini_Generated_Image_4ywnsi4ywnsi4ywn-Photoroom.svg",
+  },
 };
 
 export default function RootLayout({

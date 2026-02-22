@@ -20,6 +20,7 @@
 | **Live Stats** | Real-time WPM, accuracy, and countdown while you type |
 | **Interactive Keyboard** | On-screen keyboard that highlights every keypress |
 | **WPM Graph** | Post-test SVG chart with color-coded error segments and hover tooltips |
+| **Error Heatmap** | Visual keyboard heatmap showing which keys you missed most |
 | **Detailed Results** | WPM, accuracy, raw speed, and consistency score on a polished results screen |
 | **Keystroke Sounds** | Optional mechanical keyboard audio feedback (toggle on/off) |
 | **Share on X** | One-click share your score to X (Twitter) |

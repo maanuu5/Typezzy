@@ -36,6 +36,7 @@
 - **Styling** — [Tailwind CSS 4](https://tailwindcss.com/) via PostCSS
 - **Language** — [TypeScript 5](https://www.typescriptlang.org/)
 - **Icons** — [Tabler Icons](https://tabler.io/icons) (React)
+- **Keyboard** — [Aceternity UI](https://ui.aceternity.com/) (on-screen keyboard component)
 - **Utilities** — [clsx](https://github.com/lukeed/clsx) + [tailwind-merge](https://github.com/dcastil/tailwind-merge)
 
 ---

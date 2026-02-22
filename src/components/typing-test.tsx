@@ -39,6 +39,70 @@ function generateText(count: number): string {
 type State = "idle" | "typing" | "done";
 
 /* ---------------------------------------------------------- */
+/*  Keyboard Heatmap (results screen)                          */
+/* ---------------------------------------------------------- */
+
+const HEATMAP_ROWS: { key: string; label: string; w?: string }[][] = [
+  [
+    { key: "q", label: "Q" }, { key: "w", label: "W" }, { key: "e", label: "E" },
+    { key: "r", label: "R" }, { key: "t", label: "T" }, { key: "y", label: "Y" },
+    { key: "u", label: "U" }, { key: "i", label: "I" }, { key: "o", label: "O" },
+    { key: "p", label: "P" },
+  ],
+  [
+    { key: "a", label: "A" }, { key: "s", label: "S" }, { key: "d", label: "D" },
+    { key: "f", label: "F" }, { key: "g", label: "G" }, { key: "h", label: "H" },
+    { key: "j", label: "J" }, { key: "k", label: "K" }, { key: "l", label: "L" },
+  ],
+  [
+    { key: "z", label: "Z" }, { key: "x", label: "X" }, { key: "c", label: "C" },
+    { key: "v", label: "V" }, { key: "b", label: "B" }, { key: "n", label: "N" },
+    { key: "m", label: "M" },
+  ],
+];
+
+function KeyboardHeatmap({ errorMap }: { errorMap: Record<string, number> }) {
+  const max = Math.max(0, ...Object.values(errorMap));
+  if (max === 0) return null;
+
+  return (
+    <div className="w-full">
+      <div className="text-[10px] uppercase tracking-widest text-[#646669] font-mono mb-3 text-center">keys you missed</div>
+      <div className="flex flex-col items-center gap-1">
+        {HEATMAP_ROWS.map((row, ri) => (
+          <div key={ri} className="flex gap-1 justify-center">
+            {row.map(({ key, label, w }) => {
+              const count = errorMap[key] || 0;
+              const intensity = max > 0 && count > 0 ? count / max : 0;
+              // Interpolate opacity for the red tint
+              const bg = count > 0
+                ? `rgba(202, 71, 84, ${0.15 + intensity * 0.55})`
+                : undefined;
+              const textColor = count > 0
+                ? `rgba(202, 71, 84, ${0.6 + intensity * 0.4})`
+                : "#3a3a3c";
+              return (
+                <div
+                  key={key}
+                  className={`flex flex-col items-center justify-center rounded font-mono ${w || "w-7"} h-7 text-[10px]`}
+                  style={{ backgroundColor: bg || "#232326", color: textColor }}
+                  title={count > 0 ? `${label}: ${count}` : label}
+                >
+                  <span className="font-medium leading-none">{label}</span>
+                  {count > 0 && (
+                    <span className="text-[8px] leading-none mt-px opacity-80">{count}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- */
 /*  WPM Graph (SVG)                                            */
 /* ---------------------------------------------------------- */
 
@@ -185,6 +249,7 @@ export default function TypingTest() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [wpmHistory, setWpmHistory] = useState<WpmSample[]>([]);
+  const [errorMap, setErrorMap] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const [fadeInIdle, setFadeInIdle] = useState(true);
@@ -341,6 +406,7 @@ export default function TypingTest() {
       setCorrect(0);
       setIncorrect(0);
       setWpmHistory([]);
+      setErrorMap({});
       setShowResults(false);
       setFadeOut(false);
       lastSampleCorrect.current = 0;
@@ -401,9 +467,25 @@ export default function TypingTest() {
       if (e.code === "Backspace") {
         e.preventDefault();
         if (cur.length > 0) {
-          if (cur[cur.length - 1] === txt[cur.length - 1])
+          if (cur[cur.length - 1] === txt[cur.length - 1]) {
             setCorrect((c) => Math.max(0, c - 1));
-          else setIncorrect((c) => Math.max(0, c - 1));
+          } else {
+            setIncorrect((c) => Math.max(0, c - 1));
+            // Undo the error tracking for this key
+            const expected = txt[cur.length - 1];
+            if (expected && expected !== " ") {
+              setErrorMap((prev) => {
+                const key = expected.toLowerCase();
+                const count = (prev[key] || 0) - 1;
+                if (count <= 0) {
+                  const next = { ...prev };
+                  delete next[key];
+                  return next;
+                }
+                return { ...prev, [key]: count };
+              });
+            }
+          }
           setInput((p) => p.slice(0, -1));
         }
         return;
@@ -431,6 +513,11 @@ export default function TypingTest() {
           return n;
         });
       } else {
+        // Track which expected key was missed (skip spaces)
+        const expected = txt[cur.length];
+        if (expected && expected !== " ") {
+          setErrorMap((prev) => ({ ...prev, [expected.toLowerCase()]: (prev[expected.toLowerCase()] || 0) + 1 }));
+        }
         setIncorrect((c) => {
           const n = c + 1;
           const cor = correctRef.current;
@@ -572,9 +659,16 @@ export default function TypingTest() {
             showResults ? "opacity-100" : "opacity-0"
           }`}
         >
-          {/* Graph */}
-          <div className="w-full flex justify-center mb-8">
-            <WpmGraph samples={wpmHistory} maxSec={duration} />
+          {/* Graph + Heatmap side by side */}
+          <div className="w-full flex flex-col md:flex-row items-start justify-center gap-6 mb-8">
+            <div className="flex-1 min-w-0 flex justify-center">
+              <WpmGraph samples={wpmHistory} maxSec={duration} />
+            </div>
+            {Object.values(errorMap).some((v) => v > 0) && (
+              <div className="flex-shrink-0 flex justify-center md:pt-2">
+                <KeyboardHeatmap errorMap={errorMap} />
+              </div>
+            )}
           </div>
 
           {/* Stats grid */}

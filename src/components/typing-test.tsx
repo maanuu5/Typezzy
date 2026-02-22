@@ -618,7 +618,7 @@ export default function TypingTest() {
           <div className="flex items-center justify-center gap-3 mt-6">
             <button
               onClick={() => {
-                const shareText = `🔥 Just scored ${wpm} WPM with ${accuracy}% accuracy on typezzy!\n\nThink you can beat me? 👀⌨️`;
+                const shareText = `I just scored ${wpm} WPM with ${accuracy}% accuracy on typezzy. Think you can do better? Come find out.\n\nhttps://typezzy.vercel.app/`;
                 const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
                 window.open(url, "_blank", "noopener,noreferrer");
               }}
